@@ -1,0 +1,16 @@
+{
+  "short_name": "AssetHub",
+  "name": "AssetHub Hardware Management",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#2563EB",
+  "background_color": "#F6F8FB"
+}

@@ -1,0 +1,148 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 0. Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 3. Global Helpers
+    function isValidId(id) {
+      return id is string && id.size() <= 256;
+    }
+    
+    function incoming() {
+      return request.resource.data;
+    }
+    
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == "shadowarc055@gmail.com" ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin")
+      );
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isEmailVerified() {
+      // Relaxed check for the bootstrapped admin
+      return isSignedIn() && (request.auth.token.email_verified == true || request.auth.token.email == "shadowarc055@gmail.com");
+    }
+
+    function isValidUser(data) {
+      return data.uid is string && data.uid.size() > 0 &&
+             data.email is string && data.email.size() > 0 &&
+             data.displayName is string && data.displayName.size() > 0 &&
+             data.role in ['user', 'manager', 'admin'];
+    }
+
+    // --- Assets ---
+    match /assets/{assetId} {
+      allow get: if isSignedIn() && isValidId(assetId);
+      allow list: if isSignedIn();
+      allow create: if isAdmin() && isEmailVerified() && isValidId(assetId) && isValidAsset(incoming());
+      allow update: if isAdmin() && isEmailVerified() && isValidId(assetId) && isValidAsset(incoming());
+      allow delete: if isAdmin() && isEmailVerified() && isValidId(assetId);
+    }
+
+    function isValidAsset(data) {
+      return data.id is string && data.id.size() > 0 &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 256 &&
+             data.category is string &&
+             data.status in ['available', 'assigned', 'damaged', 'retired', 'maintenance'] &&
+             data.condition in ['new', 'good', 'fair', 'poor'] &&
+             data.value is number && data.value >= 0;
+    }
+
+    // --- Employees ---
+    match /employees/{employeeId} {
+      allow get: if isSignedIn() && isValidId(employeeId);
+      allow list: if isSignedIn();
+      allow create: if isAdmin() && isEmailVerified() && isValidId(employeeId) && isValidEmployee(incoming());
+      allow update: if isAdmin() && isEmailVerified() && isValidId(employeeId) && isValidEmployee(incoming());
+      allow delete: if isAdmin() && isEmailVerified() && isValidId(employeeId);
+    }
+
+    function isValidEmployee(data) {
+      return data.id is string && data.id.size() > 0 &&
+             data.name is string && data.name.size() > 0 &&
+             data.email is string && data.email.size() > 0 &&
+             data.role is string &&
+             data.department is string &&
+             data.systemRole in ['user', 'manager', 'admin'];
+    }
+
+    // --- Maintenance ---
+    match /maintenance/{mainId} {
+      allow get: if isSignedIn() && isValidId(mainId);
+      allow list: if isSignedIn();
+      allow create: if isAdmin() && isEmailVerified() && isValidId(mainId) && isValidMaintenance(incoming());
+      allow update: if isAdmin() && isEmailVerified() && isValidId(mainId) && isValidMaintenance(incoming());
+      allow delete: if isAdmin() && isEmailVerified() && isValidId(mainId);
+    }
+
+    function isValidMaintenance(data) {
+      return data.id is string && data.assetId is string && data.cost is number;
+    }
+
+    // --- Settings ---
+    match /settings/{key} {
+      allow get: if isSignedIn() && isValidId(key);
+      allow list: if isSignedIn();
+      allow write: if isAdmin() && isEmailVerified() && isValidId(key);
+    }
+
+    // --- Requests (Asset Request Portal) ---
+    match /requests/{requestId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(requestId);
+      allow update, delete: if isAdmin() && isEmailVerified() && isValidId(requestId);
+    }
+
+    // --- Maintenance Tickets (new lifecycle model) ---
+    match /maintenance_tickets/{ticketId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(ticketId);
+      allow update, delete: if isAdmin() && isEmailVerified() && isValidId(ticketId);
+    }
+
+    // --- Provisioning Queue ---
+    match /provisioning_queue/{email} {
+      allow read, write: if isSignedIn();
+    }
+
+    // --- Asset Assignment History ---
+    match /assets/{assetId}/history/{historyId} {
+      allow read: if isSignedIn();
+      allow create: if isAdmin() && isEmailVerified();
+      allow update, delete: if false;
+    }
+
+    // --- Users ---
+    match /users/{userId} {
+      allow get: if (isOwner(userId) || isAdmin()) && isValidId(userId);
+      allow list: if isAdmin();
+      allow create: if isOwner(userId) && isValidId(userId) && isValidUser(incoming()) && (
+        incoming().role == 'user' || 
+        (request.auth.token.email == "shadowarc055@gmail.com" && incoming().role == 'admin')
+      );
+      allow update: if isEmailVerified() && isValidId(userId) && (
+        isAdmin() || 
+        (isOwner(userId) && incoming().diff(existing()).affectedKeys().hasOnly(['displayName']))
+      );
+      allow delete: if isAdmin() && isEmailVerified() && isValidId(userId);
+    }
+  }
+}

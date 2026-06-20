@@ -1,0 +1,100 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "System user with role-based access control.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "manager", "admin"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "displayName", "role"]
+    },
+    "Asset": {
+      "title": "Asset",
+      "description": "Hardware asset managed by the system.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "serialNumber": { "type": "string" },
+        "model": { "type": "string" },
+        "vendor": { "type": "string" },
+        "status": { "type": "string", "enum": ["available", "assigned", "damaged", "retired", "maintenance"] },
+        "condition": { "type": "string", "enum": ["new", "good", "fair", "poor"] },
+        "purchaseDate": { "type": "string", "format": "date" },
+        "warrantyUntil": { "type": "string", "format": "date" },
+        "location": { "type": "string" },
+        "department": { "type": "string" },
+        "value": { "type": "number" },
+        "assignedTo": { "type": "string", "description": "Employee ID" }
+      },
+      "required": ["id", "name", "category", "status", "condition", "value"]
+    },
+    "Employee": {
+      "title": "Employee",
+      "description": "Personnel record for asset assignment.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string" },
+        "department": { "type": "string" },
+        "systemRole": { "type": "string", "enum": ["user", "manager", "admin"] }
+      },
+      "required": ["id", "name", "email", "systemRole"]
+    },
+    "MaintenanceRecord": {
+      "title": "Maintenance Record",
+      "description": "Log of repairs or inspections for an asset.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "assetId": { "type": "string" },
+        "type": { "type": "string" },
+        "description": { "type": "string" },
+        "cost": { "type": "number" },
+        "date": { "type": "string", "format": "date" },
+        "performedBy": { "type": "string" }
+      },
+      "required": ["id", "assetId", "cost"]
+    },
+    "SystemSettings": {
+      "title": "System Settings",
+      "description": "Global configuration settings.",
+      "type": "object",
+      "properties": {
+        "key": { "type": "string" },
+        "value": { "type": "string" }
+      },
+      "required": ["key", "value"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles and permissions."
+    },
+    "/assets/{assetId}": {
+      "schema": "Asset",
+      "description": "Hardware inventory items."
+    },
+    "/employees/{employeeId}": {
+      "schema": "Employee",
+      "description": "Personnel registry."
+    },
+    "/maintenance/{recordId}": {
+      "schema": "MaintenanceRecord",
+      "description": "Asset service history."
+    },
+    "/settings/{settingKey}": {
+      "schema": "SystemSettings",
+      "description": "Instance-wide settings."
+    }
+  }
+}

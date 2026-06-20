@@ -1,0 +1,78 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+}
+
+@layer base {
+  body {
+    @apply bg-[#F6F8FB] text-[#0F172A] font-sans selection:bg-blue-100 selection:text-blue-900;
+  }
+
+  /* Refined Focus Ring */
+  :focus-visible {
+    @apply outline-none ring-2 ring-blue-500/20 border-blue-500 transition-all;
+  }
+}
+
+@layer components {
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1;
+  }
+  
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-sm;
+  }
+
+  .tech-label {
+    @apply font-mono text-[10px] font-bold uppercase tracking-wider text-[#94A3B8];
+  }
+
+  .data-precision {
+    @apply font-mono tabular-nums tracking-tight;
+  }
+
+  .data-row {
+    @apply grid items-center border-b border-[#F1F5F9] hover:bg-white hover:shadow-sm transition-all duration-200 cursor-pointer;
+  }
+
+  .col-header {
+    @apply text-[11px] font-medium text-[#94A3B8] italic uppercase tracking-[0.05em] py-4;
+    font-family: Georgia, serif;
+  }
+
+  .tech-grid-header {
+    @apply bg-slate-50/50 border-b border-slate-200;
+  }
+
+  .tech-mono {
+    @apply font-mono text-[11px] tracking-tight;
+  }
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-slate-200 rounded-full hover:bg-slate-300 transition-colors;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+}
